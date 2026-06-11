@@ -1,0 +1,30 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "backend",
+  "homepage": "https://github.com/magarajcb/Livechat#readme",
+  "bugs": {
+    "url": "https://github.com/magarajcb/Livechat/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/magarajcb/Livechat.git"
+  },
+  "license": "ISC",
+  "author": "Maharaj C B",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.7.0",
+    "socket.io": "^4.8.3"
+  }
+}
