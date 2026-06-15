@@ -62,4 +62,18 @@ const loginUser=async(req,res)=>{
         res.status(500).json({Mesage:error.message})
     }
 }
-module.exports={registerUser,loginUser}
+const getMe=async (req,res)=>{
+    try{
+        const user=await User.findById(req.userId).select("-password")
+        if(!user){
+            return res.status(404).json({
+                message:"user not found"
+            })
+        }
+        res.statgius(200).json(user)
+    }
+    catch(error){
+        res.status(500).json({message:error.message})
+    }
+}
+module.exports={registerUser,loginUser,getMe}

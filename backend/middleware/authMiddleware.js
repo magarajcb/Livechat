@@ -1,0 +1,21 @@
+const jwt=require("jsonwebtoken")
+const protect=async(req,res,next)=>{
+    try{
+        const token=req.headers.authorization;
+        if(!token){
+            return res.status(401).json({Message:"No token provided"})
+        }
+        const decoded=jwt.verify(
+            token.replace("Bearer ",""),
+            process.env.JWT_SECRET
+        );
+        req.userId=decoded.id;
+        next();
+    }
+    catch(error){
+        res.status(401).json({
+            message:"Unauthorized"
+        })
+    }
+}
+module.exports=protect;
