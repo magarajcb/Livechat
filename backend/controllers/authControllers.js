@@ -33,4 +33,33 @@ const registerUser = async (req, res) => {
     });
   }
 };
-module.exports={registerUser}
+const jwt=require("jsonwebtoken");
+const user = require('../models/User');
+const loginUser=async(req,res)=>{
+    try{
+        const{email,password}=req.body;
+        const user=await User.findOne({email});
+    if(!user){
+        return res.status(400).json({
+            Message:"Invalid User"
+        })
+    }
+    const isMatch=await bcrypt.compare(password,user.password)
+    if(!isMatch){
+        return res.status(400).json({
+            Messsage:"Invalid User"
+        })
+    }
+    const token=jwt.sign({id:user._id},
+        process.env.JWT_SECRET,
+        {expiresIn:"7d"}
+    );
+    res.status(200).json({
+        Message:"Login Succesful",token,user
+    })
+    }
+    catch(error){
+        res.status(500).json({Mesage:error.message})
+    }
+}
+module.exports={registerUser,loginUser}
