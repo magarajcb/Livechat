@@ -3,8 +3,9 @@ const Conversation = require("../models/Conversation");
 const createConversation = async (req, res) => {
   try {
     const { receiverId } = req.body;
-    // console.log("Logged In User:", req.userId);
-    // console.log("Receiver:", receiverId);
+    if(req.userId===receiverId)
+      return res.staus(400).json({
+    message:"you cannot message yourself"})
 
     const existingConversation = await Conversation.findOne({
       participants: {

@@ -1,5 +1,6 @@
 const Conversation = require("../models/Conversation");
 const Message=require("../models/Message")
+    const { onlineUsers, getIO } = require("../sockets/socket");
 const sendMessage= async(req,res)=>{
     try{
         const{conversationId,receiverId,content}=req.body;
@@ -12,11 +13,19 @@ console.log("receiverId:", receiverId);
             conversation:conversationId,
             content,
         })
+        
         await Conversation.findByIdAndUpdate(conversationId,
             {
                 lastMessage:message._id
             }
-        ),
+        );
+        const receiverSocketId=onlineUsers[receiverId]
+        console.log("Receiver Socket:", receiverSocketId);
+        if(receiverSocketId){
+            getIo()
+            .to(receiverSocketId)
+            .emit("newmessage",message)
+        }
         res.status(201).json(message)
     }
     catch(error){
