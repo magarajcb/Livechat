@@ -3,7 +3,14 @@ const authRoutes=require("./routes/authRoutes")
 const userRoutes=require("./routes/userRoutes")
 const conversatioRoutes=require("./routes/conversationRoutes")
 const messageRoutes=require("./routes/messageRoutes")
+const cors = require("cors");
 const app=express();
+app.use(
+    cors({
+        origin:"http://localhost:5173",
+        credentials:true
+    })
+)
 app.use(express.json())
 app.get("/",(req,res)=>{
     res.send("Live chat app backend running")
