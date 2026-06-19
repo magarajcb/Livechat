@@ -5,8 +5,8 @@ const sendMessage= async(req,res)=>{
     try{
         const{conversationId,receiverId,content}=req.body;
         console.log("BODY:", req.body);
-console.log("conversationId:", conversationId);
-console.log("receiverId:", receiverId);
+// console.log("conversationId:", conversationId);
+// console.log("receiverId:", receiverId);
         const message=await Message.create({
             sender:req.userId,
             receiver:receiverId,

@@ -1,4 +1,74 @@
+import { useEffect, useState } from "react";
+import API from "../api/axios";
+
+
 const Home = () => {
+  const [selectedUser, setSelectedUser] = useState(null);
+const [conversation, setConversation] = useState(null);
+const [messages, setMessages] = useState([]);
+const [messageText, setMessageText] = useState("");
+  const [users, setUsers] = useState([]);
+  useEffect(()=>{
+    const fetchusers=async ()=>{
+      try{
+        const token=localStorage.getItem("token")
+        const res= await  API.get("/users",{
+          headers:{
+            Authorization:`Bearer ${token}`
+          }
+        });
+        setUsers(res.data)
+              }
+              catch(error){
+                  console.log(error)
+
+              }
+    }
+    fetchusers();
+  },[])
+  const openConversation=async(user)=>{
+    try{
+      const token=localStorage.getItem("token")
+      const res=await API.post("/conversation",{
+        receiverId:user._id
+      },{
+        headers:{
+          Authorization:`Bearer ${token}`
+        }
+      })
+      setConversation(res.data)
+      setSelectedUser(user)
+      const messageRes=await API.get(`/messages/${res.data._id}`,
+        {headers:{    Authorization:`Bearer ${token}`}
+    }
+      )
+      setMessages(messageRes.data);
+    }
+    catch(error){
+      console.log(error)
+    }
+    
+  }
+  const sendMessage=async()=>{
+        if (!messageText.trim() || !conversation) return;
+        try{
+              const token = localStorage.getItem("token");
+              const res= await API.post("/messages",{
+                conversationId: conversation._id,
+        receiverId: selectedUser._id,
+        content: messageText,
+              },
+              {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }})
+         setMessages([...messages, res.data]);
+    setMessageText("");
+        }
+         catch (error) {
+    console.log(error);
+  }
+    }
   return (
     <div className="h-screen flex">
       {/* Sidebar */}
@@ -7,35 +77,61 @@ const Home = () => {
           Live Chat
         </h2>
 
-        <div className="bg-slate-700 p-3 rounded mb-2 cursor-pointer">
-          User 1
-        </div>
-
-        <div className="bg-slate-700 p-3 rounded mb-2 cursor-pointer">
-          User 2
-        </div>
+        
+    {users.map((user) => (
+  <div
+    key={user._id}
+    onClick={() => openConversation(user)}
+    className="bg-slate-700 p-3 rounded mb-2 cursor-pointer hover:bg-slate-600"
+  >
+    {user.name}
+  </div>
+))}
       </div>
 
       {/* Chat Area */}
       <div className="flex-1 flex flex-col">
         <div className="bg-white shadow p-4 font-semibold">
-          Select a User
-        </div>
+  {selectedUser
+    ? `Chat with ${selectedUser.name}`
+    : "Select a User"}
+</div>
 
-        <div className="flex-1 p-4 bg-slate-100">
-          Messages will appear here
-        </div>
+       <div className="flex-1 p-4 bg-slate-100 overflow-y-auto">
+  {messages.map((msg) => (
+    <div
+      key={msg._id}
+      className={`mb-2 flex ${
+        msg.sender === selectedUser?._id
+          ? "justify-start"
+          : "justify-end"
+      }`}
+    >
+      <div className="bg-blue-500 text-white p-2 rounded max-w-xs">
+        {msg.content}
+      </div>
+    </div>
+  ))}
+</div>
 
         <div className="p-4 bg-white border-t">
-          <input
-            type="text"
-            placeholder="Type a message..."
-            className="w-full border p-3 rounded"
-          />
+         <input
+  type="text"
+  placeholder="Type a message..."
+  value={messageText}
+  onChange={(e) => setMessageText(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      sendMessage();
+    }
+  }}
+  className="w-full border p-3 rounded"
+/>
         </div>
       </div>
     </div>
   );
+  
 };
 
 export default Home;

@@ -4,7 +4,7 @@ const createConversation = async (req, res) => {
   try {
     const { receiverId } = req.body;
     if(req.userId===receiverId)
-      return res.staus(400).json({
+      return res.status(400).json({
     message:"you cannot message yourself"})
 
     const existingConversation = await Conversation.findOne({
