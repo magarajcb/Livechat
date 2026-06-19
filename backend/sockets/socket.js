@@ -1,38 +1,45 @@
-const onlineUsers = {}
-let ioInstance;
+const socketIO = require("socket.io");
 
-const socketHandler = (io) => {
-    ioInstance=io
+let io;
+const onlineUsers = {};
 
-    io.on("connection", (socket) => {
+const initSocket = (server) => {
+  io = socketIO(server, {
+    cors: {
+      origin: "http://localhost:5173",
+      methods: ["GET", "POST"],
+    },
+  });
 
-        console.log("User Connected", socket.id);
+  io.on("connection", (socket) => {
+    console.log("User connected:", socket.id);
 
-        socket.on("join", (userId) => {
+    socket.on("join", (userId) => {
+      onlineUsers[userId] = socket.id;
 
-            onlineUsers[userId] = socket.id;
+      console.log("Online Users:", onlineUsers);
 
-            console.log("Online Users:", onlineUsers);
-
-        });
-
-        socket.on("disconnect", () => {
-            for(const userId in onlineUsers){
-                if(onlineUsers[userId]===socket.id){
-                    delete onlineUsers[userId]
-                    break;
-                }
-            }
-  console.log("Online Users:", onlineUsers);
-            console.log("User Disconnected", socket.id);
-
-        });
-
+      io.emit("onlineUsers", Object.keys(onlineUsers));
     });
 
-    console.log("Socket Server Ready");
-}
-const getIO = () => ioInstance;
-module.exports = socketHandler;
-module.exports.onlineUsers = onlineUsers;
-module.exports.getIO = getIO;
+    socket.on("disconnect", () => {
+      Object.keys(onlineUsers).forEach((userId) => {
+        if (onlineUsers[userId] === socket.id) {
+          delete onlineUsers[userId];
+        }
+      });
+
+      io.emit("onlineUsers", Object.keys(onlineUsers));
+
+      console.log("User disconnected:", socket.id);
+    });
+  });
+};
+
+const getIO = () => io;
+
+module.exports = {
+  initSocket,
+  getIO,
+  onlineUsers,
+};
