@@ -14,13 +14,22 @@ const initSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
-    socket.on("join", (userId) => {
-      onlineUsers[userId] = socket.id;
+//   socket.on("join", (userId) => {
+//   console.log("JOIN EVENT:", userId);
 
-      console.log("Online Users:", onlineUsers);
+//   onlineUsers[userId] = socket.id;
 
-      io.emit("onlineUsers", Object.keys(onlineUsers));
-    });
+//   console.log("ONLINE USERS:", onlineUsers);
+
+//   io.emit("onlineUsers", Object.keys(onlineUsers));
+// });
+socket.on("join", (userId) => {
+  console.log("JOIN EVENT:", userId);
+
+  onlineUsers[userId] = socket.id;
+
+  console.log("ONLINE USERS:", onlineUsers);
+});
 
     socket.on("disconnect", () => {
       Object.keys(onlineUsers).forEach((userId) => {

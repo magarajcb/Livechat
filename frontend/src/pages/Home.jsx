@@ -1,14 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import API from "../api/axios";
+import { io } from "socket.io-client";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
+   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState("");
-
+  
+const [onlineUsers, setOnlineUsers] = useState([]);
   const currentUser = JSON.parse(localStorage.getItem("user"));
+
+  const messagesEndRef = useRef(null);
+  const socketRef = useRef(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -29,6 +36,40 @@ const Home = () => {
 
     fetchUsers();
   }, []);
+useEffect(() => {
+  console.log("Current User:", currentUser);
+
+  if (!currentUser?._id) {
+    console.log("No user id found");
+    return;
+  }
+
+  socketRef.current = io("http://localhost:3001");
+
+  socketRef.current.on("connect", () => {
+    console.log("Socket Connected:", socketRef.current.id);
+
+    socketRef.current.emit("join", currentUser._id);
+  });
+
+  socketRef.current.on("newMessage", (message) => {
+    console.log("Message Received:", message);
+
+    setMessages((prev) => [...prev, message]);
+  });
+socketRef.current.on("onlineUsers", (users) => {
+  console.log("ONLINE USERS:", users);
+  setOnlineUsers(users);
+});
+  return () => {
+    socketRef.current?.disconnect();
+  };
+}, [currentUser]);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [messages]);
 
   const openConversation = async (user) => {
     try {
@@ -90,36 +131,98 @@ const Home = () => {
       console.log(error);
     }
   };
+const handleLogout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+
+  socketRef.current?.disconnect();
+
+  navigate("/login");
+};
+
 
   return (
-    <div className="h-screen flex">
+    <div className="h-screen flex bg-slate-100">
       {/* Sidebar */}
-      <div className="w-1/4 bg-slate-800 text-white p-4">
-        <h2 className="text-2xl font-bold mb-6">
-          Live Chat
-        </h2>
+      <div className="w-1/4 bg-slate-900 text-white flex flex-col">
+        <div className="p-5 border-b border-slate-700">
+          <h2 className="text-2xl font-bold">
+            Live Chat
+          </h2>
+          <p className="text-sm text-slate-400">
+            Welcome {currentUser?.name}
+          </p>
+           <button
+    onClick={handleLogout}
+    className="mt-3 bg-red-500 px-3 py-2 rounded-lg text-sm hover:bg-red-600"
+  >
+    Logout
+  </button>
+        </div>
 
-        {users.map((user) => (
-          <div
-            key={user._id}
-            onClick={() => openConversation(user)}
-            className="bg-slate-700 p-3 rounded mb-2 cursor-pointer hover:bg-slate-600"
-          >
-            {user.name}
-          </div>
-        ))}
+        <div className="flex-1 overflow-y-auto p-3">
+          {users
+            .filter(
+              (user) => user._id !== currentUser?._id
+            )
+            .map((user) => (
+              <div
+                key={user._id}
+                onClick={() => openConversation(user)}
+                className={`p-3 rounded-xl mb-2 cursor-pointer transition ${
+                  selectedUser?._id === user._id
+                    ? "bg-blue-600"
+                    : "bg-slate-800 hover:bg-slate-700"
+                }`}
+              >
+               <div className="flex justify-between items-center">
+  <span>{user.name}</span>
+
+  <span>
+    {onlineUsers.includes(user._id)
+      ? "🟢"
+      : "⚫"}
+  </span>
+</div>
+
+                <div className="text-xs text-slate-300">
+                  Click to chat
+                </div>
+              </div>
+            ))}
+        </div>
       </div>
 
       {/* Chat Area */}
       <div className="flex-1 flex flex-col">
-        <div className="bg-white shadow p-4 font-semibold">
-          {selectedUser
-            ? `Chat with ${selectedUser.name}`
-            : "Select a User"}
+        {/* Header */}
+        <div className="bg-white p-4 shadow-sm border-b">
+          {selectedUser ? (
+            <div>
+              <h3 className="font-semibold text-lg">
+                {selectedUser.name}
+              </h3>
+            <p
+  className={`text-sm ${
+    onlineUsers.includes(selectedUser?._id)
+      ? "text-green-600"
+      : "text-gray-500"
+  }`}
+>
+  {onlineUsers.includes(selectedUser?._id)
+    ? "🟢 Online"
+    : "⚫ Offline"}
+</p>
+            </div>
+          ) : (
+            <h3 className="font-semibold">
+              Select a User
+            </h3>
+          )}
         </div>
 
         {/* Messages */}
-        <div className="flex-1 p-4 bg-slate-100 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-4 bg-slate-100">
           {messages.map((msg) => {
             const isMine =
               msg.sender?._id === currentUser?._id ||
@@ -128,38 +231,62 @@ const Home = () => {
             return (
               <div
                 key={msg._id}
-                className={`mb-2 flex ${
-                  isMine ? "justify-end" : "justify-start"
+                className={`flex mb-3 ${
+                  isMine
+                    ? "justify-end"
+                    : "justify-start"
                 }`}
               >
                 <div
-                  className={`p-2 rounded max-w-xs ${
+                  className={`px-4 py-2 max-w-sm shadow rounded-2xl ${
                     isMine
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-300 text-black"
+                      ? "bg-blue-500 text-white rounded-br-md"
+                      : "bg-white text-black rounded-bl-md"
                   }`}
                 >
-                  {msg.content}
+                  <p>{msg.content}</p>
+
+                  <p className="text-[10px] mt-1 text-right opacity-70">
+                    {msg.createdAt
+                      ? new Date(
+                          msg.createdAt
+                        ).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : ""}
+                  </p>
                 </div>
               </div>
             );
           })}
+
+          <div ref={messagesEndRef}></div>
         </div>
 
         {/* Input */}
-        <div className="p-4 bg-white border-t">
+        <div className="bg-white border-t p-4 flex gap-2">
           <input
             type="text"
             placeholder="Type a message..."
             value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
+            onChange={(e) =>
+              setMessageText(e.target.value)
+            }
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 sendMessage();
               }
             }}
-            className="w-full border p-3 rounded"
+            className="flex-1 border rounded-xl p-3 focus:outline-none"
           />
+
+          <button
+            onClick={sendMessage}
+            className="bg-blue-500 text-white px-6 rounded-xl hover:bg-blue-600"
+          >
+            Send
+          </button>
         </div>
       </div>
     </div>

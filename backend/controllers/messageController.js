@@ -22,9 +22,9 @@ const sendMessage= async(req,res)=>{
         const receiverSocketId=onlineUsers[receiverId]
         console.log("Receiver Socket:", receiverSocketId);
         if(receiverSocketId){
-            getIo()
+            getIO()
             .to(receiverSocketId)
-            .emit("newmessage",message)
+            .emit("newMessage",message)
         }
         res.status(201).json(message)
     }

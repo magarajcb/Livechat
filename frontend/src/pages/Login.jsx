@@ -17,20 +17,33 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      const res = await API.post("/auth/login", formData);
+  try {
+    const res = await API.post("/auth/login", formData);
 
-      localStorage.setItem("token", res.data.token);
+    console.log("LOGIN RESPONSE:", res.data);
 
-      alert("Login Successful");
-      navigate("/");
-    } catch (error) {
-      alert(error.response?.data?.message || "Login Failed");
-    }
-  };
+    localStorage.setItem("token", res.data.token);
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(res.data.user)
+    );
+
+    console.log(
+      "Saved User:",
+      localStorage.getItem("user")
+    );
+
+    alert("Login Successful");
+    navigate("/");
+  } catch (error) {
+    console.log(error);
+    alert(error.response?.data?.message || "Login Failed");
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100">
