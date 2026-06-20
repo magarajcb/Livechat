@@ -10,7 +10,7 @@ const Home = () => {
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState("");
-  
+  const [typing, setTyping] = useState(false);
 const [onlineUsers, setOnlineUsers] = useState([]);
   const currentUser = JSON.parse(localStorage.getItem("user"));
 
@@ -52,11 +52,21 @@ useEffect(() => {
     socketRef.current.emit("join", currentUser._id);
   });
 
-  socketRef.current.on("newMessage", (message) => {
-    console.log("Message Received:", message);
+ socketRef.current.on("newMessage", (message) => {
+  console.log("Message Received:", message);
 
-    setMessages((prev) => [...prev, message]);
-  });
+  setMessages((prev) => [...prev, message]);
+});
+
+socketRef.current.on("userTyping", () => {
+  console.log("USER TYPING RECEIVED");
+
+  setTyping(true);
+
+  setTimeout(() => {
+    setTyping(false);
+  }, 1500);
+});
 socketRef.current.on("onlineUsers", (users) => {
   console.log("ONLINE USERS:", users);
   setOnlineUsers(users);
@@ -270,9 +280,23 @@ const handleLogout = () => {
             type="text"
             placeholder="Type a message..."
             value={messageText}
-            onChange={(e) =>
-              setMessageText(e.target.value)
-            }
+            // onChange={(e) =>
+            //   setMessageText(e.target.value)
+            
+            // }
+            onChange={(e) => {
+  setMessageText(e.target.value);
+
+  if (selectedUser) {
+    socketRef.current.emit(
+      "typing",
+      {
+        receiverId:
+          selectedUser._id,
+      }
+    );
+  }
+}}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 sendMessage();

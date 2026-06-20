@@ -13,6 +13,16 @@ const initSocket = (server) => {
 
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
+    socket.on("typing", ({ receiverId }) => {
+  const receiverSocketId =
+    onlineUsers[receiverId];
+
+  if (receiverSocketId) {
+    io.to(receiverSocketId).emit(
+      "userTyping"
+    );
+  }
+});
 
 //   socket.on("join", (userId) => {
 //   console.log("JOIN EVENT:", userId);
