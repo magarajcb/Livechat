@@ -44,7 +44,12 @@ useEffect(() => {
     return;
   }
 
-  socketRef.current = io("https://livechat-1-kbl3.onrender.com");
+ socketRef.current = io(
+  "https://livechat-1-kbl3.onrender.com",
+  {
+    transports: ["websocket"],
+  }
+);
 
   socketRef.current.on("connect", () => {
     console.log("Socket Connected:", socketRef.current.id);
