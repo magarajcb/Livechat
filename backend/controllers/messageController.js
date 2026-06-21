@@ -20,7 +20,9 @@ const sendMessage= async(req,res)=>{
             }
         );
         const receiverSocketId=onlineUsers[receiverId]
-        console.log("Receiver Socket:", receiverSocketId);
+       console.log("Receiver ID:", receiverId);
+console.log("Receiver Socket:", receiverSocketId);
+console.log("Online Users:", onlineUsers);
         if(receiverSocketId){
             getIO()
             .to(receiverSocketId)
