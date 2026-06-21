@@ -24,6 +24,7 @@ const sendMessage= async(req,res)=>{
 console.log("Receiver Socket:", receiverSocketId);
 console.log("Online Users:", onlineUsers);
         if(receiverSocketId){
+            console.log("EMITTING NEW MESSAGE");
             getIO()
             .to(receiverSocketId)
             .emit("newMessage",message)
