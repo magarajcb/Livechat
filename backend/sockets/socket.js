@@ -39,6 +39,7 @@ socket.on("join", (userId) => {
   onlineUsers[userId] = socket.id;
 
   console.log("ONLINE USERS:", onlineUsers);
+  io.emit("onlineUsers", Object.keys(onlineUsers));
 });
 
     socket.on("disconnect", () => {
