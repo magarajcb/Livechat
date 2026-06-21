@@ -44,7 +44,7 @@ useEffect(() => {
     return;
   }
 
-  socketRef.current = io("http://localhost:3001");
+  socketRef.current = io("https://livechat-1-kbl3.onrender.com");
 
   socketRef.current.on("connect", () => {
     console.log("Socket Connected:", socketRef.current.id);
