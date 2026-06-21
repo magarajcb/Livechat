@@ -74,7 +74,7 @@ socketRef.current.on("onlineUsers", (users) => {
   return () => {
     socketRef.current?.disconnect();
   };
-}, [currentUser]);
+}, []);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
